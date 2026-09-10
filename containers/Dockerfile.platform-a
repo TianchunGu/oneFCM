@@ -1,0 +1,144 @@
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04@sha256:da6791294b0b04d7e65d87b7451d6f2390b4d36225ab0701ee7dfec5769829f5 AS platform-a-base
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG CMAKE_PACKAGE_VERSION=3.22.1-1ubuntu1.22.04.2
+ARG INTEL_BASEKIT_INSTALLER_SHA256=b379986e96a70d4d8c64b46eaecec73f14916ba39438ff167cb5f4f5fffc66de
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        "cmake=${CMAKE_PACKAGE_VERSION}" \
+        build-essential \
+        ca-certificates \
+        pkg-config \
+        python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# The Intel offline installer is supplied as a named BuildKit context so that
+# the large installer is available during the build without becoming part of
+# the final image.
+RUN --mount=type=bind,from=intel_basekit_installer_dir,source=intel-oneapi-base-toolkit-2025.0.0.885_offline.sh,target=/run/intel-basekit-installer.sh,ro \
+    printf '%s  %s\n' \
+        "${INTEL_BASEKIT_INSTALLER_SHA256}" \
+        /run/intel-basekit-installer.sh \
+        | sha256sum --check --strict - \
+    && sh /run/intel-basekit-installer.sh \
+        -s -a \
+        --silent \
+        --eula accept \
+        --intel-sw-improvement-program-consent decline \
+        --install-dir /opt/intel/oneapi \
+        --components intel.oneapi.lin.dpcpp-cpp-compiler
+
+RUN source /opt/intel/oneapi/setvars.sh >/dev/null \
+    && /opt/intel/oneapi/installer/installer --list-products \
+        | tee /tmp/oneapi-products.txt \
+    && grep -F 'intel.oneapi.lin.basekit.product' /tmp/oneapi-products.txt \
+    && grep -F '2025.0.0+884' /tmp/oneapi-products.txt \
+    && icpx --version | tee /tmp/icpx-version.txt \
+    && grep -F 'Intel(R) oneAPI DPC++/C++ Compiler 2025.0.0' \
+        /tmp/icpx-version.txt \
+    && test -f /opt/intel/oneapi/dpl/2022.7/include/oneapi/dpl/random \
+    && nvcc --version | tee /tmp/nvcc-version.txt \
+    && grep -F 'release 12.4, V12.4.131' /tmp/nvcc-version.txt \
+    && cmake --version | tee /tmp/cmake-version.txt \
+    && grep -Fx 'cmake version 3.22.1' \
+        <(head -n 1 /tmp/cmake-version.txt) \
+    && sycl-ls | tee /tmp/sycl-ls.txt \
+    && grep -E '\[(opencl|native_cpu):cpu\]' /tmp/sycl-ls.txt
+
+FROM platform-a-base AS cuda-adapter-builder
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+# The CUDA adapter is built from the pinned Unified Runtime v0.10.0 revision
+# and pinned UMF source supplied locally, so the adapter build performs no
+# source download.
+RUN --mount=type=bind,from=ur_source,target=/src/unified-runtime,ro \
+    --mount=type=bind,from=umf_source,target=/src/unified-memory-framework,ro \
+    test -f /usr/local/cuda/lib64/stubs/libcuda.so \
+    && cmake \
+        -S /src/unified-runtime \
+        -B /work/ur-build \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_COMPILER=gcc \
+        -DCMAKE_CXX_COMPILER=g++ \
+        -DUR_BUILD_ADAPTER_CUDA=ON \
+        -DUR_BUILD_EXAMPLES=OFF \
+        -DUR_BUILD_TESTS=OFF \
+        -DUR_BUILD_TOOLS=OFF \
+        -DUR_ENABLE_SANITIZER=OFF \
+        -DUR_ENABLE_TRACING=OFF \
+        -DCUDA_CUDA_LIBRARY=/usr/local/cuda/lib64/stubs/libcuda.so \
+        -DUMF_BUILD_SHARED_LIBRARY=OFF \
+        -DUMF_DISABLE_HWLOC=ON \
+        "-DFETCHCONTENT_SOURCE_DIR_UNIFIED-MEMORY-FRAMEWORK=/src/unified-memory-framework" \
+    && cmake --build /work/ur-build \
+        --target ur_adapter_cuda \
+        --parallel "$(nproc)" \
+    && test -f /work/ur-build/lib/libur_adapter_cuda.so.0.10.0 \
+    && test "$(readelf -d /work/ur-build/lib/libur_adapter_cuda.so.0.10.0 \
+        | awk -F'[][]' '/SONAME/ {print $2}')" = libur_adapter_cuda.so.0 \
+    && mkdir -p /out \
+    && cp --dereference \
+        /work/ur-build/lib/libur_adapter_cuda.so.0.10.0 \
+        /out/libur_adapter_cuda.so.0.10.0 \
+    && sha256sum /out/libur_adapter_cuda.so.0.10.0
+
+FROM platform-a-base AS platform-a
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG INTEL_BASEKIT_INSTALLER_SHA256=b379986e96a70d4d8c64b46eaecec73f14916ba39438ff167cb5f4f5fffc66de
+ARG UR_COMMIT=d040a8face402e5ecc7c99cdb4e976832592ce99
+ARG UMF_COMMIT=59c4150b7120a7af5b3c8eb2d9b8bbb5d2e96aa3
+ARG ONEFCM_SOURCE_COMMIT=unknown
+
+RUN test -n "${ONEFCM_SOURCE_COMMIT}" \
+    && test "${ONEFCM_SOURCE_COMMIT}" != "unknown"
+
+COPY --from=cuda-adapter-builder \
+    /out/libur_adapter_cuda.so.0.10.0 \
+    /opt/intel/oneapi/compiler/2025.0/lib/libur_adapter_cuda.so.0.10.0
+
+RUN cd /opt/intel/oneapi/compiler/2025.0/lib \
+    && ln -s libur_adapter_cuda.so.0.10.0 libur_adapter_cuda.so.0 \
+    && ln -s libur_adapter_cuda.so.0.10.0 libur_adapter_cuda.so \
+    && test "$(readelf -d libur_adapter_cuda.so.0.10.0 \
+        | awk -F'[][]' '/SONAME/ {print $2}')" = libur_adapter_cuda.so.0 \
+    && ! readelf -d libur_adapter_cuda.so.0.10.0 | grep -F 'libumf.so' \
+    && mkdir -p /opt/onefcm-environment \
+    && printf '%s\n' \
+        "onefcm_source_commit=${ONEFCM_SOURCE_COMMIT}" \
+        "intel_basekit_product=2025.0.0+884" \
+        "intel_dpcpp_compiler=2025.0.0+1169" \
+        "intel_basekit_installer_sha256=${INTEL_BASEKIT_INSTALLER_SHA256}" \
+        "unified_runtime_commit=${UR_COMMIT}" \
+        "unified_memory_framework_commit=${UMF_COMMIT}" \
+        'cuda_toolkit=12.4.131' \
+        'cuda_gpu_arch=sm_89' \
+        'cmake=3.22.1' \
+        'build_type=Release' \
+        'compile_options=-O3 -ffast-math' \
+        > /opt/onefcm-environment/manifest.txt \
+    && sha256sum libur_adapter_cuda.so.0.10.0 \
+        > /opt/onefcm-environment/cuda-adapter.sha256
+
+LABEL org.opencontainers.image.title="oneFCM Platform A environment" \
+      org.opencontainers.image.description="Ubuntu 22.04 / oneAPI 2025.0 / CUDA 12.4.1 environment for oneFCM on NVIDIA sm_89" \
+      org.opencontainers.image.source="https://github.com/TianchunGu/oneFCM" \
+      org.opencontainers.image.revision="${ONEFCM_SOURCE_COMMIT}" \
+      io.onefcm.unified-runtime.revision="d040a8face402e5ecc7c99cdb4e976832592ce99" \
+      io.onefcm.unified-memory-framework.revision="59c4150b7120a7af5b3c8eb2d9b8bbb5d2e96aa3"
+
+WORKDIR /workspace/oneFCM
+COPY . .
+
+CMD ["bash"]

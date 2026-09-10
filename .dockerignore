@@ -1,0 +1,13 @@
+.git
+.github
+.vscode
+.venv
+**/__pycache__
+**/*.pyc
+build
+build-*
+cmake-build-*
+out
+*.log
+*.csv
+!tests/fixtures/tiny.csv

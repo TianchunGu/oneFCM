@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use oneFCM in your research, please cite the software and the accompanying paper."
+type: software
+title: "oneFCM: An Efficient and Portable SYCL/oneAPI Implementation of Fuzzy c-Means Clustering"
+authors:
+  - family-names: Gu
+    given-names: Tianchun
+    orcid: "https://orcid.org/0009-0008-1207-9840"
+  - family-names: He
+    given-names: Guanlin
+    orcid: "https://orcid.org/0000-0003-3753-3671"
+version: 1.0.0
+license: BSD-3-Clause
+repository-code: "https://github.com/TianchunGu/oneFCM"
