@@ -2,10 +2,36 @@
 
 ## Overview
 
-oneFCM is a SYCL/oneAPI implementation of classical fuzzy c-means (FCM)
-clustering. It is an engineering and performance-portability implementation
-study: the contribution is the adaptation and integration of established
-parallel techniques for FCM, not a new clustering algorithm.
+This repository contains the official implementation accompanying the paper
+**oneFCM: An Efficient and Portable SYCL/oneAPI Implementation of Fuzzy c-Means Clustering**.
+oneFCM implements classical fuzzy c-means clustering for CPUs and GPUs using
+SYCL and oneAPI. The contribution is the adaptation and integration of
+established parallel techniques for FCM, not a new clustering algorithm.
+The build produces the `cmeansOA` command-line executable. The code version
+associated with the paper is
+[v1.0.0](https://github.com/TianchunGu/oneFCM/releases/tag/v1.0.0).
+
+## Authors
+
+Tianchun Gu and Guanlin He.
+
+## Citation
+
+Please cite this paper if you use oneFCM in your research:
+
+```bibtex
+@article{guOneFCM,
+  author  = {Gu, Tianchun and He, Guanlin},
+  title   = {{oneFCM}: An Efficient and Portable {SYCL}/{oneAPI} Implementation of Fuzzy c-Means Clustering},
+  journal = {Future Generation Computer Systems},
+  year    = {in press},
+  note    = {Accepted for publication}
+}
+```
+
+Corresponding author: Guanlin He.
+
+For software citation metadata, see [`CITATION.cff`](CITATION.cff).
 
 ## Features
 
@@ -318,13 +344,6 @@ This repository contains the production oneFCM implementation, public
 regression tests, synthetic workload generators, and source links for the
 real-world datasets used in the manuscript. Large third-party datasets are not
 redistributed, and real-world preprocessing pipelines are not packaged here.
-
-## Citation
-
-Tianchun Gu and Guanlin He, “oneFCM: An Efficient and Portable SYCL/oneAPI Implementation of Fuzzy c-Means Clustering.”
-
-Machine-readable software citation metadata are available in
-[`CITATION.cff`](CITATION.cff).
 
 ## License
 

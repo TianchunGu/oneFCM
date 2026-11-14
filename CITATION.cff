@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use oneFCM in your research, please cite the software and the accompanying paper."
+message: "Please use these metadata to cite oneFCM. For the accompanying paper, see the Citation section of the README."
 type: software
 title: "oneFCM: An Efficient and Portable SYCL/oneAPI Implementation of Fuzzy c-Means Clustering"
 authors:
