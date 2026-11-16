@@ -53,6 +53,41 @@ For software citation metadata, see [`CITATION.cff`](CITATION.cff).
   `native-dynamic` execution.
 - Project-scoped fast-math selection, enabled or disabled at configure time.
 
+## Project layout
+
+The main source files and supporting materials are organized as follows:
+
+```text
+oneFCM/
+├── CMakeLists.txt                     # Root build and target configuration
+├── CITATION.cff                       # Software citation metadata
+├── LICENSE                            # BSD 3-Clause license
+├── cmeans/
+│   ├── CMakeLists.txt                 # cmeansOA and SYCL backend configuration
+│   ├── include/cmeans/
+│   │   ├── cmeans.h                   # Public FCM entry point
+│   │   ├── convergence.h              # Strict center-change threshold check
+│   │   ├── execution_mode.h           # Iteration protocols and run settings
+│   │   ├── m_power_config.h           # Fuzzifier and power-path configuration
+│   │   └── work_group_config.h        # Work-group requests and selection
+│   └── src/
+│       ├── cmeans.cpp                 # CLI, FCM kernels, and iteration loop
+│       ├── execution_mode.cpp         # Protocol parsing and stopping rules
+│       ├── m_power_config.cpp         # Fuzzifier validation and power paths
+│       └── work_group_config.cpp      # Resource-aware work-group selection
+├── util/
+│   ├── CMakeLists.txt                 # Utility library build configuration
+│   ├── include/util/utils.h           # CSV, normalization, and timing interfaces
+│   └── src/utils.cpp                  # Input, output, and utility implementations
+├── tests/                             # Public regression suite
+│   └── fixtures/tiny.csv              # Small input used in the README example
+├── Datasets/                          # Synthetic generators and real-world dataset links
+└── containers/                        # Platform A reference environment
+```
+
+See [`tests/README.md`](tests/README.md), [`Datasets/README.md`](Datasets/README.md),
+and [`containers/README.md`](containers/README.md) for details.
+
 ## Requirements
 
 - The documented release workflow assumes CMake 3.16 or newer.
