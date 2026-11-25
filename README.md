@@ -19,19 +19,29 @@ Tianchun Gu and Guanlin He.
 
 Please cite this paper if you use oneFCM in your research:
 
+Tianchun Gu and Guanlin He. oneFCM: An efficient and portable SYCL/oneAPI
+implementation of fuzzy c-means clustering. *Future Generation Computer Systems*
+**189** (2027), 108936. [https://doi.org/10.1016/j.future.2026.108936](https://doi.org/10.1016/j.future.2026.108936).
+
 ```bibtex
 @article{guOneFCM,
   author  = {Gu, Tianchun and He, Guanlin},
-  title   = {{oneFCM}: An Efficient and Portable {SYCL}/{oneAPI} Implementation of Fuzzy c-Means Clustering},
+  title   = {{oneFCM}: An efficient and portable {SYCL/oneAPI} implementation of fuzzy {$c$}-means clustering},
   journal = {Future Generation Computer Systems},
-  year    = {in press},
-  note    = {Accepted for publication}
+  volume  = {189},
+  pages   = {108936},
+  year    = {2027},
+  doi     = {10.1016/j.future.2026.108936},
+  url     = {https://doi.org/10.1016/j.future.2026.108936}
 }
 ```
 
+Published online on 21 November 2026; the volume year for citation is 2027.
+
 Corresponding author: Guanlin He.
 
-For software citation metadata, see [`CITATION.cff`](CITATION.cff).
+For software metadata and the preferred paper citation, see
+[`CITATION.cff`](CITATION.cff).
 
 ## Features
 

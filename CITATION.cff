@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Please use these metadata to cite oneFCM. For the accompanying paper, see the Citation section of the README."
+message: "If you use oneFCM, please cite the accompanying paper specified in preferred-citation."
 type: software
 title: "oneFCM: An Efficient and Portable SYCL/oneAPI Implementation of Fuzzy c-Means Clustering"
 authors:
@@ -12,3 +12,19 @@ authors:
 version: 1.0.0
 license: BSD-3-Clause
 repository-code: "https://github.com/TianchunGu/oneFCM"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Gu
+      given-names: Tianchun
+      orcid: "https://orcid.org/0009-0008-1207-9840"
+    - family-names: He
+      given-names: Guanlin
+      orcid: "https://orcid.org/0000-0003-3753-3671"
+  title: "oneFCM: An efficient and portable SYCL/oneAPI implementation of fuzzy c-means clustering"
+  journal: "Future Generation Computer Systems"
+  volume: "189"
+  start: "108936"
+  year: 2027
+  doi: "10.1016/j.future.2026.108936"
+  url: "https://doi.org/10.1016/j.future.2026.108936"
