@@ -11,10 +11,6 @@ The build produces the `cmeansOA` command-line executable. The code version
 associated with the paper is
 [v1.0.0](https://github.com/TianchunGu/oneFCM/releases/tag/v1.0.0).
 
-## Authors
-
-Tianchun Gu and Guanlin He.
-
 ## Citation
 
 Please cite this paper if you use oneFCM in your research:
